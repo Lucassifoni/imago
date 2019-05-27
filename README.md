@@ -1,6 +1,7 @@
 # Imago
 
 Bindings (for my usage) to image-rs/image. Mainly because I didn't find any Elixir/Erlang library to iterate over pixels of compressed formats like Jpeg.
+I'll need to at least open/process a bit/save images from rust.
 
 At the time of this writing, it supports only one thing : getting a `Vec<u8>` from Rust with `r, g, b, a` ordering, from a file path.
 
@@ -11,4 +12,10 @@ iex> Imago.read_pixels("/path/to/image.jpg|png|gif|ico|bmp|tiff") # Image format
   255, 134, 139, 158, 255, 134, 139, 158, 255, 136, 139, 158, 255, 135, 138,
   157, 255, 135, 136, 156, 255, 135, 136, 156, 255, 136, 137, 157, 255, 136,
   137, 157, 255, ...]}
+  
+iex> Imago.read_pixels("/this/one/does/not/exist")
+:error
+
+iex> Imago.read_pixels("/this/one/is_a_text_file.txt")
+:error
 ```
