@@ -10,7 +10,7 @@ defmodule Imago.MixProject do
       deps: deps(),
       compilers: [:rustler] ++ Mix.compilers(),
       rustler_crates: [imago: [
-        mode: (if Mix.env() == :prod, do: :release, else: :debug)
+        #mode: (if Mix.env() == :prod, do: :release, else: :debug)
       ]]
     ]
   end

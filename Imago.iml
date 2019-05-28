@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/native/imago/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/native/imago/benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/_build/dev/lib/rustler" />
+      <excludeFolder url="file://$MODULE_DIR$/_build/test/lib/rustler" />
       <excludeFolder url="file://$MODULE_DIR$/native/imago/target" />
     </content>
     <orderEntry type="jdk" jdkName="Elixir 1.8.2" jdkType="Elixir SDK" />
