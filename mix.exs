@@ -13,7 +13,7 @@ defmodule Imago.MixProject do
         links: %{
           "github" => "https://github.com/Lucassifoni/imago",
         },
-        files:  ~w(lib priv .formatter.exs mix.exs README* readme* LICENSE* native test_image.jpg license* CHANGELOG* changelog* src)
+        files:  ~w(lib priv .formatter.exs mix.exs README* LICENSE* native test_image.jpg)
       ],
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
