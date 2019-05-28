@@ -11,7 +11,7 @@ defmodule Imago do
   defp n_get_fingerprint(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_get_fingerprint_4x4(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_get_fingerprint_8x8(_a), do: :erlang.nif_error(:nif_not_loaded)
-  
+
   def test_image() do
     (__ENV__.file |> Path.dirname) <> "/../test_image.jpg"
   end
@@ -21,7 +21,7 @@ defmodule Imago do
   lists of 4 * 64 integers. This ensures validity and conciseness.
   The real methods do return a list of integers.
   """
-  def test_checksum({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
+  def slice5({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
 
   @doc """
   Alias of read_pixels_rgba
@@ -32,8 +32,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of rgba values
-  iex> Imago.test_image() |> Imago.read_pixels_rgba |> Imago.test_checksum
-  {:ok, [198, 198, 198, 255, 198, 198]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_rgba |> Imago.slice5
+      {:ok, [198, 198, 198, 255, 198, 198]}
   """
   def read_pixels_rgba(path) do
     n_read_pixels_rgba(path)
@@ -41,8 +42,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of rgb values
-  iex> Imago.test_image() |> Imago.read_pixels_rgb |> Imago.test_checksum
-  {:ok, [198, 198, 198, 198, 198, 198]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_rgb |> Imago.slice5
+      {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_rgb(path) do
     n_read_pixels_rgb(path)
@@ -50,8 +52,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of red values
-  iex> Imago.test_image() |> Imago.read_pixels_red |> Imago.test_checksum
-  {:ok, [198, 198, 198, 198, 198, 198]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_red |> Imago.slice5
+      {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_red(path) do
     n_read_pixels_red(path)
@@ -59,8 +62,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of green values
-  iex> Imago.test_image() |> Imago.read_pixels_green |> Imago.test_checksum
-  {:ok, [198, 198, 198, 198, 198, 198]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_green |> Imago.slice5
+      {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_green(path) do
     n_read_pixels_green(path)
@@ -68,8 +72,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of blue values
-  iex> Imago.test_image() |> Imago.read_pixels_blue |> Imago.test_checksum
-  {:ok, [198, 198, 198, 198, 198, 198]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_blue |> Imago.slice5
+      {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_blue(path) do
     n_read_pixels_blue(path)
@@ -77,8 +82,9 @@ defmodule Imago do
 
   @doc """
   Gets a list of alpha values
-  iex> Imago.test_image() |> Imago.read_pixels_alpha |> Imago.test_checksum
-  {:ok, [255, 255, 255, 255, 255, 255]}
+
+      iex> Imago.test_image() |> Imago.read_pixels_alpha |> Imago.slice5
+      {:ok, [255, 255, 255, 255, 255, 255]}
   """
   def read_pixels_alpha(path) do
     n_read_pixels_alpha(path)
@@ -93,8 +99,9 @@ defmodule Imago do
 
   @doc """
   Returns an image's fingerprint, sampled on a 4x4 luminance grid
-  iex> Imago.test_image() |> Imago.get_fingerprint_4x4 |> Imago.test_checksum
-  {:ok, [207, 223, 174, 208, 225, 170]}
+
+      iex> Imago.test_image() |> Imago.get_fingerprint_4x4 |> Imago.slice5
+      {:ok, [207, 223, 174, 208, 225, 170]}
   """
   def get_fingerprint_4x4(path) do
     n_get_fingerprint_4x4(path)
@@ -102,8 +109,9 @@ defmodule Imago do
 
   @doc """
   Returns an image's fingerprint, sampled on a 8x8 luminance grid.
-  iex> Imago.test_image() |> Imago.get_fingerprint_8x8 |> Imago.test_checksum
-  {:ok, [198, 222, 222, 227, 209, 161]}
+
+      iex> Imago.test_image() |> Imago.get_fingerprint_8x8 |> Imago.slice5
+      {:ok, [198, 222, 222, 227, 209, 161]}
   """
   def get_fingerprint_8x8(path) do
     n_get_fingerprint_8x8(path)
@@ -113,8 +121,9 @@ defmodule Imago do
   Returns the average luminance of an image, sampled on a 4x4 grid,
   as an int.
   See get_fingerprint_4x4 for details
-  iex> Imago.test_image() |> Imago.luminance
-  {:ok, 192}
+
+      iex> Imago.test_image() |> Imago.luminance
+      {:ok, 192}
   """
   def luminance(path) do
     case get_fingerprint(path) do
