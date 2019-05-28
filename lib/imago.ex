@@ -33,7 +33,7 @@ defmodule Imago do
   @doc """
   Gets a list of rgba values
   iex> Imago.test_image() |> Imago.read_pixels_rgba |> Imago.test_checksum
-  {:ok, [200, 200, 200, 255, 221, 221]}
+  {:ok, [198, 198, 198, 255, 198, 198]}
   """
   def read_pixels_rgba(path) do
     n_read_pixels_rgba(path)
@@ -42,7 +42,7 @@ defmodule Imago do
   @doc """
   Gets a list of rgb values
   iex> Imago.test_image() |> Imago.read_pixels_rgb |> Imago.test_checksum
-  {:ok, [200, 200, 200, 221, 221, 221]}
+  {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_rgb(path) do
     n_read_pixels_rgb(path)
@@ -51,7 +51,7 @@ defmodule Imago do
   @doc """
   Gets a list of red values
   iex> Imago.test_image() |> Imago.read_pixels_red |> Imago.test_checksum
-  {:ok, [200, 221, 223, 228, 212, 160]}
+  {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_red(path) do
     n_read_pixels_red(path)
@@ -60,7 +60,7 @@ defmodule Imago do
   @doc """
   Gets a list of green values
   iex> Imago.test_image() |> Imago.read_pixels_green |> Imago.test_checksum
-  {:ok, [200, 221, 223, 228, 212, 160]}
+  {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_green(path) do
     n_read_pixels_green(path)
@@ -69,7 +69,7 @@ defmodule Imago do
   @doc """
   Gets a list of blue values
   iex> Imago.test_image() |> Imago.read_pixels_blue |> Imago.test_checksum
-  {:ok, [200, 221, 223, 228, 212, 160]}
+  {:ok, [198, 198, 198, 198, 198, 198]}
   """
   def read_pixels_blue(path) do
     n_read_pixels_blue(path)
@@ -94,7 +94,7 @@ defmodule Imago do
   @doc """
   Returns an image's fingerprint, sampled on a 4x4 luminance grid
   iex> Imago.test_image() |> Imago.get_fingerprint_4x4 |> Imago.test_checksum
-  {:ok, [208, 225, 180, 208, 225, 190]}
+  {:ok, [207, 223, 174, 208, 225, 170]}
   """
   def get_fingerprint_4x4(path) do
     n_get_fingerprint_4x4(path)
@@ -103,7 +103,7 @@ defmodule Imago do
   @doc """
   Returns an image's fingerprint, sampled on a 8x8 luminance grid.
   iex> Imago.test_image() |> Imago.get_fingerprint_8x8 |> Imago.test_checksum
-  {:ok, [200, 221, 222, 227, 212, 159]}
+  {:ok, [198, 222, 222, 227, 209, 161]}
   """
   def get_fingerprint_8x8(path) do
     n_get_fingerprint_8x8(path)
@@ -114,7 +114,7 @@ defmodule Imago do
   as an int.
   See get_fingerprint_4x4 for details
   iex> Imago.test_image() |> Imago.luminance
-  {:ok, 207}
+  {:ok, 192}
   """
   def luminance(path) do
     case get_fingerprint(path) do
