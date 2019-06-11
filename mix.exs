@@ -4,7 +4,7 @@ defmodule Imago.MixProject do
   def project do
     [
       app: :imago,
-      version: "0.1.0",
+      version: "0.1.1",
       description: "Image manipulation at the pixel level, fingerprinting, [...]",
       source_url: "https://github.com/Lucassifoni/imago",
       package: [
