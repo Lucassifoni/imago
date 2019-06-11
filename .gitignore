@@ -25,3 +25,7 @@ imago-*.tar
 .idea
 
 priv
+
+*.jpg.jpg
+
+projectFilesBackup

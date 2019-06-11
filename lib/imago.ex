@@ -11,6 +11,7 @@ defmodule Imago do
   defp n_get_fingerprint(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_get_fingerprint_4x4(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_get_fingerprint_8x8(_a), do: :erlang.nif_error(:nif_not_loaded)
+  defp n_flatten_as_jpg(_a), do: :erlang.nif_error(:nif_not_loaded)
 
   def test_image() do
     (__ENV__.file |> Path.dirname) <> "/../test_image.jpg"
@@ -28,6 +29,15 @@ defmodule Imago do
   """
   def read_pixels(path) do
     n_read_pixels(path)
+  end
+
+  @doc """
+  Re-saves an image as a jpeg.
+  iex> Imago.test_image() |> Imago.flatten_as_jpg
+  {:ok, "#{(__ENV__.file |> Path.dirname) <> "/../test_image.jpg"}.jpg"}
+  """
+  def flatten_as_jpg(path) do
+    n_flatten_as_jpg(path)
   end
 
   @doc """

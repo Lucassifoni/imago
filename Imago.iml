@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="ELIXIR_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
-    <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/lib" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/native/imago/src" isTestSource="false" />
@@ -31,3 +30,4 @@
     <orderEntry type="library" name="stream_data" level="project" />
   </component>
 </module>
+

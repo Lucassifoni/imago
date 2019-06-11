@@ -27,7 +27,8 @@ rustler_export_nifs! {
     ("get_fingerprint", 1, get_fingerprint),
     ("get_fingerprint", 1, get_fingerprint),
     ("get_fingerprint_8x8", 1, get_fingerprint_8x8),
-    ("get_fingerprint_4x4", 1, get_fingerprint_4x4)
+    ("get_fingerprint_4x4", 1, get_fingerprint_4x4),
+    ("flatten_as_jpg", 1, flatten_as_jpg)
     ],
     None
 }
@@ -43,6 +44,16 @@ fn open_file_arg0<'a>(arg0: Term<'a>) -> Result<DynamicImage, Error> {
 }
 
 /* Public */
+
+fn flatten_as_jpg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    if let Ok(f) = open_file_arg0(args[0]) {
+        let p: &'a str = args[0].decode()?;
+        let path = format!("{}{}", p, ".jpg");
+        f.save(path.clone());
+        return Ok((atoms::ok(), path).encode(env));
+    }
+    Err(rustler::Error::Atom("error"))
+}
 
 fn read_pixels<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
