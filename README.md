@@ -84,7 +84,7 @@ iex(1)> Imago.get_fingerprint_8x8("/path/to/image.jpg")
   l, l, l, l, l, l, l, l
  ]} # where l = luminance
  
-iex(1)> {:ok, r} = Imago.dither_bayer('moon.jpg')
+iex(1)> {:ok, r} = Imago.dither_bayer('moon.jpg', 50)
         {:ok, {width, height, [pixels]}}
 iex(1)> Imago.save_pgm(r)
         :ok
