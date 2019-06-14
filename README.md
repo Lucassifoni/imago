@@ -3,17 +3,19 @@
 Bindings (for my usage) to image-rs/image. Mainly because I didn't find any Elixir/Erlang library to iterate over pixels of compressed formats like Jpeg.
 I'll need to at least open/process a bit/save images from rust.
 
-At the time of this writing, it supports only two things : 
- - getting a `Vec<u8>` of r/g/b/a, rgb, or rgba pixels
+At the time of this writing, it supports only those things : 
+ - getting a `(w: u8, h: u8, pixels: Vec<u8>)` of r/g/b/a, rgb, or rgba pixels
  - getting a `Vec<u8>` **that represents a luminance fingerprint**.
+ - filters: `threshold(path, threshold)`, `dither_bayer(path, threshold)`
+ - saving something as a PGM image (mainly to check validity.)
 
 ```elixir
 iex> Imago.read_pixels("/path/to/image.jpg|png|gif|ico|bmp|tiff") # Image formats are those of image-rs/image
 {:ok,
- [131, 140, 157, 255, 130, 139, 156, 255, 131, 138, 156, 255, 131, 138, 156,
+ {1200, 1500, [131, 140, 157, 255, 130, 139, 156, 255, 131, 138, 156, 255, 131, 138, 156,
   255, 134, 139, 158, 255, 134, 139, 158, 255, 136, 139, 158, 255, 135, 138,
   157, 255, 135, 136, 156, 255, 135, 136, 156, 255, 136, 137, 157, 255, 136,
-  137, 157, 255, ...]}
+  137, 157, 255, ...]}}
 
 iex(1)> Imago.get_fingerprint_4x4("/path/to/image.jpg")
 {:ok,
@@ -81,4 +83,12 @@ iex(1)> Imago.get_fingerprint_8x8("/path/to/image.jpg")
   l, l, l, l, l, l, l, l,
   l, l, l, l, l, l, l, l
  ]} # where l = luminance
+ 
+iex(1)> {:ok, r} = Imago.dither_bayer('moon.jpg')
+        {:ok, {width, height, [pixels]}}
+iex(1)> Imago.save_pgm(r)
+        :ok
 ```
+
+Moon, bayer-dithered  
+![Moon, bayer-dithered](dithers.jpg)

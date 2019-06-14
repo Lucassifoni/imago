@@ -17,18 +17,22 @@ mod atoms {
 rustler_export_nifs! {
     "Elixir.Imago",
     [
-    ("read_pixels", 1, read_pixels),
-    ("read_pixels_rgba", 1, read_pixels_rgba),
-    ("read_pixels_rgb", 1, read_pixels_rgb),
-    ("read_pixels_red", 1, read_pixels_red),
-    ("read_pixels_green", 1, read_pixels_green),
-    ("read_pixels_blue", 1, read_pixels_blue),
-    ("read_pixels_alpha", 1, read_pixels_alpha),
-    ("get_fingerprint", 1, get_fingerprint),
-    ("get_fingerprint", 1, get_fingerprint),
-    ("get_fingerprint_8x8", 1, get_fingerprint_8x8),
-    ("get_fingerprint_4x4", 1, get_fingerprint_4x4),
-    ("flatten_as_jpg", 1, flatten_as_jpg)
+    ("n_read_pixels", 1, read_pixels),
+    ("n_read_pixels_rgba", 1, read_pixels_rgba),
+    ("n_read_pixels_rgb", 1, read_pixels_rgb),
+    ("n_read_pixels_red", 1, read_pixels_red),
+    ("n_read_pixels_green", 1, read_pixels_green),
+    ("n_read_pixels_blue", 1, read_pixels_blue),
+    ("n_read_pixels_alpha", 1, read_pixels_alpha),
+    ("n_get_fingerprint", 1, get_fingerprint),
+    ("n_get_fingerprint", 1, get_fingerprint),
+    ("n_get_fingerprint_8x8", 1, get_fingerprint_8x8),
+    ("n_get_fingerprint_4x4", 1, get_fingerprint_4x4),
+    ("n_flatten_as_jpg", 1, flatten_as_jpg),
+    ("n_threshold", 2, threshold),
+    ("n_dither_floyd_steinberg", 2, dither_floyd_steinberg),
+    ("n_dither_bayer", 2, dither_bayer),
+    ("n_dither_unknown", 2, dither_unknown)
     ],
     None
 }
@@ -45,11 +49,146 @@ fn open_file_arg0<'a>(arg0: Term<'a>) -> Result<DynamicImage, Error> {
 
 /* Public */
 
+fn threshold<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    if let Ok(f) = open_file_arg0(args[0]) {
+        let th: u8 = args[1].decode()?;
+        let mut out: Vec<u8> = Vec::new();
+        let w = f.width();
+        let h = f.height();
+        for pixel in f.pixels() {
+            if pixel_luminance(pixel.2.data[0], pixel.2.data[1], pixel.2.data[2]) > th {
+                out.push(255);
+            } else {
+                out.push(0)
+            }
+        }
+        return Ok((atoms::ok(), (w, h, out)).encode(env));
+    }
+    Err(rustler::Error::Atom("Error"))
+}
+
+fn dither_floyd_steinberg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    if let Ok(f) = open_file_arg0(args[0]) {
+        let th: u8 = args[1].decode()?;
+        let w = f.width();
+        let h = f.height();
+        let size = w as usize * h as usize;
+        let u_size = size as u32;
+        let mut out: Vec<u8> = Vec::with_capacity(size);
+        for _i in 0..size {
+            out.push(0);
+        }
+        let w = f.width();
+        let h = f.height();
+        let mut err: u8;
+        let mut new_pixel: u8;
+        for pixel in f.pixels() {
+            let x = pixel.0;
+            let y = pixel.1;
+            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
+            let ind = index_2d_to_1d(x, y, w);
+            if lum < th {
+                new_pixel = 0;
+            } else {
+                new_pixel = 255;
+            }
+            err = (lum - new_pixel) / 16;
+            out[ind as usize] = new_pixel;
+            if ind + 1 < u_size {
+                out[(ind + 1) as usize] += err * 7;
+            }
+            if ind + w - 1 < u_size {
+                out[(ind + w - 1) as usize] += err * 3;
+            }
+            if ind + w < u_size {
+                out[(ind + w) as usize] += err * 5;
+            }
+            if ind + w + 1 < u_size {
+                out[(ind + w + 1) as usize] += err;
+            }
+        }
+        return Ok((atoms::ok(), (w, h, out)).encode(env));
+    }
+    Err(rustler::Error::Atom("Error"))
+}
+
+fn dither_bayer<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    if let Ok(f) = open_file_arg0(args[0]) {
+        let bayer_threshold_map = [
+            [15, 135, 45, 165],
+            [195, 75, 225, 105],
+            [60, 180, 30, 150],
+            [240, 120, 210, 90]
+        ];
+        let w = f.width();
+        let h = f.height();
+        let th: u8 = args[1].decode()?;
+        let mut out: Vec<u8> = Vec::new();
+        for pixel in f.pixels() {
+            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
+            if (lum + bayer_threshold_map[(pixel.0 % 4) as usize][(pixel.1 % 4) as usize]) / 2 < th {
+                out.push(0);
+            } else {
+                out.push(255);
+            }
+        }
+        return Ok((atoms::ok(), (w, h, out)).encode(env));
+    }
+    Err(rustler::Error::Atom("Error"))
+}
+
+fn dither_unknown<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    if let Ok(f) = open_file_arg0(args[0]) {
+        let th: u8 = args[1].decode()?;
+        let w = f.width();
+        let h = f.height();
+        let size = w as usize * h as usize;
+        let u_size = size as u32;
+        let mut out: Vec<u8> = Vec::with_capacity(size);
+        for _i in 0..size {
+            out.push(0);
+        }
+        let mut err: u8;
+        let mut new_pixel: u8;
+        for pixel in f.pixels() {
+            let x = pixel.0;
+            let y = pixel.1;
+            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
+            let ind = index_2d_to_1d(x, y, w);
+            if lum < th {
+                new_pixel = 0;
+            } else {
+                new_pixel = 255;
+            }
+            err = (lum - new_pixel) / 8;
+            out[ind as usize] = new_pixel;
+            if ind + 1 < u_size {
+                out[(ind + 1) as usize] += err;
+            }
+            if ind + 2 < u_size {
+                out[(ind + 2) as usize] += err;
+            }
+            if ind + w - 1 < u_size {
+                out[(ind + w - 1) as usize] += err;
+            }
+            if ind + w < u_size {
+                out[(ind + w) as usize] += err;
+            }
+            if ind + w + 1 < u_size {
+                out[(ind + w + 1) as usize] += err;
+            }
+        }
+        return Ok((atoms::ok(), (w, h, out)).encode(env));
+    }
+    Err(rustler::Error::Atom("Error"))
+}
+
+
 fn flatten_as_jpg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
         let p: &'a str = args[0].decode()?;
         let path = format!("{}{}", p, ".jpg");
-        f.save(path.clone());
+        let _res = f.save(path.clone());
         return Ok((atoms::ok(), path).encode(env));
     }
     Err(rustler::Error::Atom("error"))
@@ -57,7 +196,9 @@ fn flatten_as_jpg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
 
 fn read_pixels<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }
@@ -68,35 +209,45 @@ fn read_pixels_rgba<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> 
 
 fn read_pixels_rgb<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_rgb_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_rgb_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }
 
 fn read_pixels_red<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_red_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_red_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }
 
 fn read_pixels_green<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_green_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_green_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }
 
 fn read_pixels_blue<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_blue_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_blue_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }
 
 fn read_pixels_alpha<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
-        return Ok((atoms::ok(), read_pixels_alpha_r(f)).encode(env));
+        let w = f.width();
+        let h = f.height();
+        return Ok((atoms::ok(), (w, h, read_pixels_alpha_r(f))).encode(env));
     }
     Err(rustler::Error::Atom("error"))
 }

@@ -12,9 +12,15 @@ defmodule Imago do
   defp n_get_fingerprint_4x4(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_get_fingerprint_8x8(_a), do: :erlang.nif_error(:nif_not_loaded)
   defp n_flatten_as_jpg(_a), do: :erlang.nif_error(:nif_not_loaded)
+  defp n_threshold(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
+  defp n_dither_floyd_steinberg(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
+  defp n_dither_bayer(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
+  defp n_dither_unknown(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
 
   def test_image() do
-    (__ENV__.file |> Path.dirname) <> "/../test_image.jpg"
+    (
+      __ENV__.file
+      |> Path.dirname) <> "/../test_image.jpg"
   end
 
   @doc """
@@ -22,7 +28,20 @@ defmodule Imago do
   lists of 4 * 64 integers. This ensures validity and conciseness.
   The real methods do return a list of integers.
   """
-  def slice5({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
+  def slice5({:ok, {_w, _h, result}}), do: {:ok, Enum.slice(result, 0..5)}
+  def slicefp5({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
+
+  def save_pgm({width, height, data}, path) do
+    { :ok, handle } = File.open(path, [:write])
+    header =
+       "P2\n"
+    <> "#{width} #{height}\n"
+    <> "255\n"
+    IO.write(handle, header)
+    Enum.chunk_every(data, width)
+    |> Enum.each(fn row -> IO.write(handle, Enum.join(row, " ") <> "\n") end)
+    File.close(handle)
+  end
 
   @doc """
   Alias of read_pixels_rgba
@@ -33,11 +52,59 @@ defmodule Imago do
 
   @doc """
   Re-saves an image as a jpeg.
-  iex> Imago.test_image() |> Imago.flatten_as_jpg
-  {:ok, "#{(__ENV__.file |> Path.dirname) <> "/../test_image.jpg"}.jpg"}
+
+      iex> Imago.test_image() |> Imago.flatten_as_jpg
+      {:ok, "#{
+    (
+      __ENV__.file
+      |> Path.dirname) <> "/../test_image.jpg"
+  }.jpg"}
   """
   def flatten_as_jpg(path) do
     n_flatten_as_jpg(path)
+  end
+
+  @doc """
+  Applies a threshold filter to an image
+
+      iex> Imago.test_image() |> Imago.threshold(128) |> Imago.slice5
+      {:ok, [255, 255, 255, 255, 255, 255]}
+  """
+  def threshold(path, threshold) do
+    n_threshold(path, threshold)
+  end
+
+  @doc """
+  Applies a floyd-steinberg filter to an image
+
+      iex> Imago.test_image() |> Imago.dither_floyd_steinberg(128) |> Imago.slice5
+      {:ok, [255, 255, 255, 255, 255, 255]}
+  """
+  def dither_floyd_steinberg(path, threshold) do
+    n_dither_floyd_steinberg(path, threshold)
+  end
+
+  @doc """
+  Applies a bayer filter to an image
+
+      iex> Imago.test_image() |> Imago.dither_bayer(128) |> Imago.slice5
+      {:ok, [0, 0, 0, 0, 0, 0]}
+  """
+  def dither_bayer(path, threshold) do
+    n_dither_bayer(path, threshold)
+  end
+
+
+  @doc """
+  Applies an unknown filter to an image.
+  I wrote it years ago from a paper on the internet,
+  but lost the name. Feel free to correct it.
+
+      iex> Imago.test_image() |> Imago.dither_unknown(128) |> Imago.slice5
+      {:ok, [255, 255, 255, 255, 255, 255]}
+  """
+  def dither_unknown(path, threshold) do
+    n_dither_unknown(path, threshold)
   end
 
   @doc """
@@ -110,7 +177,7 @@ defmodule Imago do
   @doc """
   Returns an image's fingerprint, sampled on a 4x4 luminance grid
 
-      iex> Imago.test_image() |> Imago.get_fingerprint_4x4 |> Imago.slice5
+      iex> Imago.test_image() |> Imago.get_fingerprint_4x4 |> Imago.slicefp5
       {:ok, [207, 223, 174, 208, 225, 170]}
   """
   def get_fingerprint_4x4(path) do
@@ -120,7 +187,7 @@ defmodule Imago do
   @doc """
   Returns an image's fingerprint, sampled on a 8x8 luminance grid.
 
-      iex> Imago.test_image() |> Imago.get_fingerprint_8x8 |> Imago.slice5
+      iex> Imago.test_image() |> Imago.get_fingerprint_8x8 |> Imago.slicefp5
       {:ok, [198, 222, 222, 227, 209, 161]}
   """
   def get_fingerprint_8x8(path) do
@@ -137,8 +204,16 @@ defmodule Imago do
   """
   def luminance(path) do
     case get_fingerprint(path) do
-      :error -> {:error, "Failed to fingerprint image at path #{path}"}
-      {:ok, result} -> {:ok, (result |> Enum.sum) / length(result) |> round }
+      :error ->
+        {:error, "Failed to fingerprint image at path #{path}"}
+      {:ok, result} ->
+        {
+          :ok,
+          (
+            result
+            |> Enum.sum) / length(result)
+          |> round
+        }
     end
   end
 end
