@@ -31,8 +31,7 @@ rustler_export_nifs! {
     ("n_flatten_as_jpg", 1, flatten_as_jpg),
     ("n_threshold", 2, threshold),
     ("n_dither_floyd_steinberg", 2, dither_floyd_steinberg),
-    ("n_dither_bayer", 2, dither_bayer),
-    ("n_dither_unknown", 2, dither_unknown)
+    ("n_dither_bayer", 2, dither_bayer)
     ],
     None
 }
@@ -56,7 +55,7 @@ fn threshold<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         let w = f.width();
         let h = f.height();
         for pixel in f.pixels() {
-            if pixel_luminance(pixel.2.data[0], pixel.2.data[1], pixel.2.data[2]) > th {
+            if luminance(pixel.2.data[0], pixel.2.data[1], pixel.2.data[2]) > th {
                 out.push(255);
             } else {
                 out.push(0)
@@ -72,39 +71,33 @@ fn dither_floyd_steinberg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term
         let th: u8 = args[1].decode()?;
         let w = f.width();
         let h = f.height();
-        let size = w as usize * h as usize;
-        let u_size = size as u32;
-        let mut out: Vec<u8> = Vec::with_capacity(size);
-        for _i in 0..size {
-            out.push(0);
+        let mut out: Vec<u8> = Vec::new();
+        for pixel in f.pixels() {
+            out.push(luminance(pixel.2[0], pixel.2[1], pixel.2[2]));
         }
-        let w = f.width();
-        let h = f.height();
         let mut err: u8;
         let mut new_pixel: u8;
-        for pixel in f.pixels() {
-            let x = pixel.0;
-            let y = pixel.1;
-            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
-            let ind = index_2d_to_1d(x, y, w);
-            if lum < th {
-                new_pixel = 0;
-            } else {
-                new_pixel = 255;
-            }
-            err = (lum - new_pixel) / 16;
-            out[ind as usize] = new_pixel;
-            if ind + 1 < u_size {
-                out[(ind + 1) as usize] += err * 7;
-            }
-            if ind + w - 1 < u_size {
-                out[(ind + w - 1) as usize] += err * 3;
-            }
-            if ind + w < u_size {
-                out[(ind + w) as usize] += err * 5;
-            }
-            if ind + w + 1 < u_size {
-                out[(ind + w + 1) as usize] += err;
+        let mut ind: u32;
+        for i in 0..h {
+            for j in 0..w {
+                ind = i * w + j;
+                let lum = out[ind as usize];
+                new_pixel = if lum < th { 0 } else { 255 };
+                err = lum - new_pixel;
+                out[ind as usize] = new_pixel;
+                if j + 1 < w {
+                    out[(ind + 1) as usize] += (err * 7) / 16;    
+                }
+                if i + 1 == h {
+                    continue;
+                }
+                if j > 0 {
+                    out[(ind + w - 1) as usize] += (err * 3) / 16;    
+                    out[(ind + w) as usize] += (err * 5) / 16;
+                }
+                if j + 1 < w {
+                    out[(ind + w + 1) as usize] += err / 16;
+                }
             }
         }
         return Ok((atoms::ok(), (w, h, out)).encode(env));
@@ -125,7 +118,7 @@ fn dither_bayer<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
         let th: u8 = args[1].decode()?;
         let mut out: Vec<u8> = Vec::new();
         for pixel in f.pixels() {
-            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
+            let lum = luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
             if (lum + bayer_threshold_map[(pixel.0 % 4) as usize][(pixel.1 % 4) as usize]) / 2 < th {
                 out.push(0);
             } else {
@@ -136,53 +129,6 @@ fn dither_bayer<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     }
     Err(rustler::Error::Atom("Error"))
 }
-
-fn dither_unknown<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
-    if let Ok(f) = open_file_arg0(args[0]) {
-        let th: u8 = args[1].decode()?;
-        let w = f.width();
-        let h = f.height();
-        let size = w as usize * h as usize;
-        let u_size = size as u32;
-        let mut out: Vec<u8> = Vec::with_capacity(size);
-        for _i in 0..size {
-            out.push(0);
-        }
-        let mut err: u8;
-        let mut new_pixel: u8;
-        for pixel in f.pixels() {
-            let x = pixel.0;
-            let y = pixel.1;
-            let lum = pixel_luminance(pixel.2[0], pixel.2[1], pixel.2[2]);
-            let ind = index_2d_to_1d(x, y, w);
-            if lum < th {
-                new_pixel = 0;
-            } else {
-                new_pixel = 255;
-            }
-            err = (lum - new_pixel) / 8;
-            out[ind as usize] = new_pixel;
-            if ind + 1 < u_size {
-                out[(ind + 1) as usize] += err;
-            }
-            if ind + 2 < u_size {
-                out[(ind + 2) as usize] += err;
-            }
-            if ind + w - 1 < u_size {
-                out[(ind + w - 1) as usize] += err;
-            }
-            if ind + w < u_size {
-                out[(ind + w) as usize] += err;
-            }
-            if ind + w + 1 < u_size {
-                out[(ind + w + 1) as usize] += err;
-            }
-        }
-        return Ok((atoms::ok(), (w, h, out)).encode(env));
-    }
-    Err(rustler::Error::Atom("Error"))
-}
-
 
 fn flatten_as_jpg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     if let Ok(f) = open_file_arg0(args[0]) {
@@ -329,7 +275,7 @@ fn compute_fingerprint_8x8(f: DynamicImage) -> Vec<u32> {
     let g = f.resize_exact(32, 32, FilterType::Nearest);
     let mut sign: [u32; 64] = [0; 64];
     for pix in g.pixels() {
-        sign[index_2d_to_1d(pix.0 / 4, pix.1 / 4, 8) as usize] += pixel_luminance(pix.2.data[0], pix.2.data[1], pix.2.data[2]) as u32;
+        sign[index_2d_to_1d(pix.0 / 4, pix.1 / 4, 8) as usize] += luminance(pix.2.data[0], pix.2.data[1], pix.2.data[2]) as u32;
     }
     sign.iter().map(|a| *a / 16).collect()
 }
@@ -338,7 +284,7 @@ fn compute_fingerprint_4x4(f: DynamicImage) -> Vec<u32> {
     let g = f.resize_exact(32, 32, FilterType::Nearest);
     let mut sign: [u32; 16] = [0; 16];
     for pix in g.pixels() {
-        sign[index_2d_to_1d(pix.0 / 8, pix.1 / 8, 4) as usize] += pixel_luminance(pix.2.data[0], pix.2.data[1], pix.2.data[2]) as u32;
+        sign[index_2d_to_1d(pix.0 / 8, pix.1 / 8, 4) as usize] += luminance(pix.2.data[0], pix.2.data[1], pix.2.data[2]) as u32;
     }
     sign.iter().map(|a| *a / 64).collect()
 }
@@ -347,6 +293,6 @@ fn index_2d_to_1d(x: u32, y: u32, rows: u32) -> u32 {
     rows * y + x
 }
 
-fn pixel_luminance(r: u8, g: u8, b: u8) -> u8 {
+fn luminance(r: u8, g: u8, b: u8) -> u8 {
     ((r as f64 * 0.3) + (g as f64 * 0.59) + (b as f64 * 0.11)) as u8
 }

@@ -15,7 +15,6 @@ defmodule Imago do
   defp n_threshold(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
   defp n_dither_floyd_steinberg(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
   defp n_dither_bayer(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
-  defp n_dither_unknown(_a, _b), do: :erlang.nif_error(:nif_not_loaded)
 
   def test_image() do
     (
@@ -31,6 +30,9 @@ defmodule Imago do
   def slice5({:ok, {_w, _h, result}}), do: {:ok, Enum.slice(result, 0..5)}
   def slicefp5({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
 
+  @doc """
+  Saves a PGM image to the given path
+  """
   def save_pgm({width, height, data}, path) do
     { :ok, handle } = File.open(path, [:write])
     header =
@@ -92,19 +94,6 @@ defmodule Imago do
   """
   def dither_bayer(path, threshold) do
     n_dither_bayer(path, threshold)
-  end
-
-
-  @doc """
-  Applies an unknown filter to an image.
-  I wrote it years ago from a paper on the internet,
-  but lost the name. Feel free to correct it.
-
-      iex> Imago.test_image() |> Imago.dither_unknown(128) |> Imago.slice5
-      {:ok, [255, 255, 255, 255, 255, 255]}
-  """
-  def dither_unknown(path, threshold) do
-    n_dither_unknown(path, threshold)
   end
 
   @doc """
