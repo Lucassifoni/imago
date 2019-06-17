@@ -27,18 +27,18 @@ defmodule Imago do
   lists of 4 * 64 integers. This ensures validity and conciseness.
   The real methods do return a list of integers.
   """
-  def slice5({:ok, {_w, _h, result}}), do: {:ok, Enum.slice(result, 0..5)}
+  def slice5({:ok, {w, h, result}}), do: {:ok, {w, h, Enum.slice(result, 0..5)}}
   def slicefp5({:ok, result}), do: {:ok, Enum.slice(result, 0..5)}
 
   @doc """
   Saves a PGM image to the given path
   """
   def save_pgm({width, height, data}, path) do
-    { :ok, handle } = File.open(path, [:write])
+    {:ok, handle} = File.open(path, [:write])
     header =
-       "P2\n"
-    <> "#{width} #{height}\n"
-    <> "255\n"
+      "P2\n"
+      <> "#{width} #{height}\n"
+      <> "255\n"
     IO.write(handle, header)
     Enum.chunk_every(data, width)
     |> Enum.each(fn row -> IO.write(handle, Enum.join(row, " ") <> "\n") end)
@@ -70,7 +70,7 @@ defmodule Imago do
   Applies a threshold filter to an image
 
       iex> Imago.test_image() |> Imago.threshold(128) |> Imago.slice5
-      {:ok, [255, 255, 255, 255, 255, 255]}
+      {:ok, {64, 64, [255, 255, 255, 255, 255, 255]}}
   """
   def threshold(path, threshold) do
     n_threshold(path, threshold)
@@ -80,7 +80,7 @@ defmodule Imago do
   Applies a floyd-steinberg filter to an image
 
       iex> Imago.test_image() |> Imago.dither_floyd_steinberg(128) |> Imago.slice5
-      {:ok, [255, 255, 255, 255, 255, 255]}
+      {:ok, {64, 64, [255, 255, 255, 255, 255, 255]}}
   """
   def dither_floyd_steinberg(path, threshold) do
     n_dither_floyd_steinberg(path, threshold)
@@ -90,7 +90,7 @@ defmodule Imago do
   Applies a bayer filter to an image
 
       iex> Imago.test_image() |> Imago.dither_bayer(128) |> Imago.slice5
-      {:ok, [0, 0, 0, 0, 0, 0]}
+      {:ok, {64, 64, [0, 0, 0, 0, 0, 0]}}
   """
   def dither_bayer(path, threshold) do
     n_dither_bayer(path, threshold)
@@ -100,7 +100,7 @@ defmodule Imago do
   Gets a list of rgba values
 
       iex> Imago.test_image() |> Imago.read_pixels_rgba |> Imago.slice5
-      {:ok, [198, 198, 198, 255, 198, 198]}
+      {:ok, {64, 64, [198, 198, 198, 255, 198, 198]}}
   """
   def read_pixels_rgba(path) do
     n_read_pixels_rgba(path)
@@ -110,7 +110,7 @@ defmodule Imago do
   Gets a list of rgb values
 
       iex> Imago.test_image() |> Imago.read_pixels_rgb |> Imago.slice5
-      {:ok, [198, 198, 198, 198, 198, 198]}
+      {:ok, {64, 64, [198, 198, 198, 198, 198, 198]}}
   """
   def read_pixels_rgb(path) do
     n_read_pixels_rgb(path)
@@ -120,7 +120,7 @@ defmodule Imago do
   Gets a list of red values
 
       iex> Imago.test_image() |> Imago.read_pixels_red |> Imago.slice5
-      {:ok, [198, 198, 198, 198, 198, 198]}
+      {:ok, {64, 64, [198, 198, 198, 198, 198, 198]}}
   """
   def read_pixels_red(path) do
     n_read_pixels_red(path)
@@ -130,7 +130,7 @@ defmodule Imago do
   Gets a list of green values
 
       iex> Imago.test_image() |> Imago.read_pixels_green |> Imago.slice5
-      {:ok, [198, 198, 198, 198, 198, 198]}
+      {:ok, {64, 64, [198, 198, 198, 198, 198, 198]}}
   """
   def read_pixels_green(path) do
     n_read_pixels_green(path)
@@ -140,7 +140,7 @@ defmodule Imago do
   Gets a list of blue values
 
       iex> Imago.test_image() |> Imago.read_pixels_blue |> Imago.slice5
-      {:ok, [198, 198, 198, 198, 198, 198]}
+      {:ok, {64, 64, [198, 198, 198, 198, 198, 198]}}
   """
   def read_pixels_blue(path) do
     n_read_pixels_blue(path)
@@ -150,7 +150,7 @@ defmodule Imago do
   Gets a list of alpha values
 
       iex> Imago.test_image() |> Imago.read_pixels_alpha |> Imago.slice5
-      {:ok, [255, 255, 255, 255, 255, 255]}
+      {:ok, {64, 64, [255, 255, 255, 255, 255, 255]}}
   """
   def read_pixels_alpha(path) do
     n_read_pixels_alpha(path)

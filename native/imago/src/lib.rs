@@ -86,13 +86,13 @@ fn dither_floyd_steinberg<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term
                 err = lum - new_pixel;
                 out[ind as usize] = new_pixel;
                 if j + 1 < w {
-                    out[(ind + 1) as usize] += (err * 7) / 16;    
+                    out[(ind + 1) as usize] += (err * 7) / 16;
                 }
                 if i + 1 == h {
                     continue;
                 }
                 if j > 0 {
-                    out[(ind + w - 1) as usize] += (err * 3) / 16;    
+                    out[(ind + w - 1) as usize] += (err * 3) / 16;
                     out[(ind + w) as usize] += (err * 5) / 16;
                 }
                 if j + 1 < w {
