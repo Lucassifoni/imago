@@ -4,8 +4,12 @@ defmodule Imago.MixProject do
   def project do
     [
       app: :imago,
-      version: "0.2.1",
-      description: "Image manipulation at the pixel level, fingerprinting, [...]",
+      version: "0.2.15",
+      description: """
+        Image manipulation at the pixel level, fingerprinting, dithering...
+        I aim to be able to resize/crop/desaturate/hue shift/dither images,
+        and have access to raw pixel lists elixir-side, even for JPEG images.
+      """,
       source_url: "https://github.com/Lucassifoni/imago",
       package: [
         name: "imago",
