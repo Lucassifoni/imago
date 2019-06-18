@@ -89,6 +89,3 @@ iex(1)> {:ok, r} = Imago.dither_bayer('moon.jpg', 50)
 iex(1)> Imago.save_pgm(r)
         :ok
 ```
-
-Moon, bayer-dithered  
-![Moon, bayer-dithered](dithers.jpg)
