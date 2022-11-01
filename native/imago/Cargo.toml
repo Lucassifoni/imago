@@ -12,4 +12,4 @@ crate-type = ["dylib"]
 rustler = "0.20.0"
 rustler_codegen = "0.20.0"
 lazy_static = "1.0"
-image = "0.21.1"
+image = "0.23.12"
