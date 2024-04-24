@@ -1,3 +1,7 @@
+# 2024 Notice
+
+Hey :-) . If you stumble upon that, you should use `Vix` (https://hex.pm/packages/vix) or Image (https://hex.pm/packages/image) now.
+
 # Imago
 
 Bindings (for my usage) to image-rs/image. Mainly because I didn't find any Elixir/Erlang library to iterate over pixels of compressed formats like Jpeg.
