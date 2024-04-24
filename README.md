@@ -1,6 +1,6 @@
 # 2024 Notice
 
-Hey :-) . If you stumble upon that, you should use `Vix` (https://hex.pm/packages/vix) or Image (https://hex.pm/packages/image) now.
+Hey :-) . If you stumble upon that, you should use `Vix` (https://hex.pm/packages/vix) or `Image` (https://hex.pm/packages/image) now.
 
 # Imago
 
